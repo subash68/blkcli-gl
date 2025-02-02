@@ -1,54 +1,77 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
+
+type App struct {
+}
 
 // Define product here
 type Product struct {
-	Id       int
-	Name     string
-	Quantity int
-	Price    float64
+	Id       int     `json:"id"`
+	Name     string  `json:"product_name"`
+	Quantity int     `json:"quantity"`
+	Price    float64 `json:"price"`
 }
 
-var products []Product
+func (a *App) Initialize() (*sql.DB, error) {
+	conStr := fmt.Sprintf("postgres://%v:%v@localhost:%v/%v?sslmode=disable", DbUser, DbPass, DbPort, DbName)
 
-func getAllProducts(w http.ResponseWriter, req *http.Request) {
-	log.Println("Getting All products")
-	json.NewEncoder(w).Encode(products)
+	db, err := sql.Open("postgres", conStr)
+
+	return db, err
 }
 
-func getProductDetails(w http.ResponseWriter, req *http.Request) {
-	queryParams := mux.Vars(req)
-	id := queryParams["id"]
+// var products []Product
 
-	for _, item := range products {
-		itemId, _ := strconv.Atoi(id)
-		if item.Id == itemId {
-			json.NewEncoder(w).Encode(item)
-		}
+func (a *App) getAllProducts(w http.ResponseWriter, req *http.Request) {
+	con, err := a.Initialize()
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	defer con.Close()
+
+	var products []Product
+	rows, err := con.Query("SELECT id, product_name, quantity, price from products")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for rows.Next() {
+		var p Product
+		err := rows.Scan(&p.Id, &p.Name, &p.Quantity, &p.Price)
+		if err != nil {
+			log.Fatal(err)
+		}
+		products = append(products, p)
+	}
+
+	data, err := json.Marshal(products)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }
 
 func AddProduct(w http.ResponseWriter, req *http.Request) {}
 
 func main() {
-
-	products = []Product{
-		Product{Id: 1, Name: "Product1", Quantity: 100, Price: 10.34},
-		Product{Id: 2, Name: "Product2", Quantity: 1000, Price: 1.55},
-	}
-
-	// Define router here
+	app := App{}
 	router := mux.NewRouter().StrictSlash(true) // FIXME: what does the strict slash does ?
 
-	router.HandleFunc("/products", getAllProducts)
-	router.HandleFunc("/product/{id}", getProductDetails)
+	//router.HandleFunc("/products", getAllProducts)
+	//router.HandleFunc("/product/{id}", getProductDetails)
+	app.Initialize()
+	router.HandleFunc("/products", app.getAllProducts)
 	http.ListenAndServe(":8000", router)
 }
