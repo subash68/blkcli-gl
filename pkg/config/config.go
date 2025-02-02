@@ -1,4 +1,4 @@
-package main
+package config
 
 const DbUser = "postgres"
 const DbName = "product"
