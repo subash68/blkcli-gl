@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service 
+metadata:
+  name: prd-api-svc
+  labels:
+    name: prd-api-svc
+    app: product-api
+spec:
+  selector:
+    name: prd-api-deploy 
+    app: product-api
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30001
+  type: NodePort
+  

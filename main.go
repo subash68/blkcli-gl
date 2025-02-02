@@ -23,7 +23,7 @@ type Product struct {
 }
 
 func (a *App) Initialize() (*sql.DB, error) {
-	conStr := fmt.Sprintf("postgres://%v:%v@localhost:%v/%v?sslmode=disable", DbUser, DbPass, DbPort, DbName)
+	conStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", DbUser, DbPass, DbHost, DbPort, DbName)
 
 	db, err := sql.Open("postgres", conStr)
 

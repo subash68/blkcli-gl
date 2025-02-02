@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: prd-api-deploy 
+  labels:
+    name: prd-api-deploy 
+    app: product-api 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: prd-api-deploy 
+      app: product-api
+  template:
+    metadata:
+      name: prd-api-deploy 
+      labels:
+        name: prd-api-deploy 
+        app: product-api 
+    spec:
+      containers:
+        - name: product-api
+          image: bsubi68/blkcli-gl:0.1.0
+          ports:
+            - containerPort: 8000
+
