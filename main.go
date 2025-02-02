@@ -30,8 +30,6 @@ func (a *App) Initialize() (*sql.DB, error) {
 	return db, err
 }
 
-// var products []Product
-
 func (a *App) getAllProducts(w http.ResponseWriter, req *http.Request) {
 	con, err := a.Initialize()
 	if err != nil {
@@ -63,15 +61,47 @@ func (a *App) getAllProducts(w http.ResponseWriter, req *http.Request) {
 	w.Write(data)
 }
 
+func (a *App) getProductDetails(w http.ResponseWriter, req *http.Request) {
+	conn, err := a.Initialize()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	id := mux.Vars(req)["id"]
+
+	var product Product
+	query := fmt.Sprintf("SELECT id, product_name, quantity, price FROM products WHERE id=%v", id)
+	row, err := conn.Query(query)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	for row.Next() {
+		err := row.Scan(&product.Id, &product.Name, &product.Quantity, &product.Price)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	data, err := json.Marshal(product)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Write(data)
+
+}
+
 func AddProduct(w http.ResponseWriter, req *http.Request) {}
 
 func main() {
 	app := App{}
 	router := mux.NewRouter().StrictSlash(true) // FIXME: what does the strict slash does ?
 
-	//router.HandleFunc("/products", getAllProducts)
-	//router.HandleFunc("/product/{id}", getProductDetails)
 	app.Initialize()
 	router.HandleFunc("/products", app.getAllProducts)
+	router.HandleFunc("/product/{id}", app.getProductDetails)
 	http.ListenAndServe(":8000", router)
 }
