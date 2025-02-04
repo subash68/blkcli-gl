@@ -8,10 +8,6 @@ import (
 	"github.com/subash68/blkcli-gl/pkg/product"
 )
 
-// Define product here
-
-func AddProduct(w http.ResponseWriter, req *http.Request) {}
-
 func main() {
 	app := product.App{}
 	router := mux.NewRouter().StrictSlash(true) // FIXME: what does the strict slash does ?
