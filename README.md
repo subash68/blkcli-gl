@@ -6,6 +6,7 @@
     initialize db connection and mux serve in a different package
     new package should be create for all the endpoints
     define models using protocol buffers (proto files)
+   create makefile for compiling proto file and inclue in build process
 
 
 
